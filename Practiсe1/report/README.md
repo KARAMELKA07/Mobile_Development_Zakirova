@@ -29,14 +29,14 @@
 ## **control_lesson1**
 
 ### **Создан экран с информацией о контакте:**
+![control_lesson1_1](images/control_lesson1_1.png)
 
-![control_lesson1_1](images\control_lesson1_1.png)
 
 ### **Настроено переключение экранов при смене ориентации:**
 
-**Вертикальный режим:** !![control_lesson1_2](images\control_lesson1_2.png)
+**Вертикальный режим:** !![control_lesson1_2](images/control_lesson1_2.png)
 
-**Горизонтальный режим:** ![control_lesson1_3](images\control_lesson1_3.png)
+**Горизонтальный режим:** ![control_lesson1_3](images/control_lesson1_3.png)
 
 ------
 
@@ -44,7 +44,7 @@
 
 ### **Создан экран:**
 
-![buttonclicker](images\buttonclicker.png)
+![buttonclicker](images/buttonclicker.png)
 
 ### **Реализована обработка событий кнопок:**
 
