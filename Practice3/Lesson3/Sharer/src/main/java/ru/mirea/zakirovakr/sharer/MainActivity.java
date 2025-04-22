@@ -2,7 +2,6 @@ package ru.mirea.zakirovakr.sharer;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,13 +22,9 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        Button shareButton = findViewById(R.id.button);
-        shareButton.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_SEND);
-            intent.setType("*/*");
-            intent.putExtra(Intent.EXTRA_TEXT, "Mirea");
-            startActivity(Intent.createChooser(intent, "Выбор за вами!"));
-        });
-
+        Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_TEXT, "Mirea");
+        startActivity(Intent.createChooser(intent, "Выбор за вами!"));
     }
 }

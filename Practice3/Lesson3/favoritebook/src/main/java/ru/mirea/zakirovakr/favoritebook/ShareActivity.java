@@ -4,46 +4,51 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 public class ShareActivity extends AppCompatActivity {
 
-    private EditText editBookUser, editQuoteUser;
+    private EditText editTextBook;
+    private EditText editTextQuote;
+    private TextView textViewDevBook;
+    private TextView textViewDevQuote;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_share);
 
-        TextView textBookDev = findViewById(R.id.textViewDevBook);
-        TextView textQuoteDev = findViewById(R.id.textViewDevQuote);
-        editBookUser = findViewById(R.id.editTextUserBook);
-        editQuoteUser = findViewById(R.id.editTextUserQuote);
-        Button sendButton = findViewById(R.id.buttonSendBack);
+        textViewDevBook = findViewById(R.id.textViewDevBook);
+        textViewDevQuote = findViewById(R.id.textViewDevQuote);
+        editTextBook = findViewById(R.id.editTextUserBook);
+        editTextQuote = findViewById(R.id.editTextUserQuote);
 
-        // Получение данных от MainActivity
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            String book_name = extras.getString(MainActivity.BOOK_NAME_KEY);
-            String quotes_name = extras.getString(MainActivity.QUOTES_KEY);
-            textBookDev.setText("Любимая книга разработчика: " + book_name);
-            textQuoteDev.setText("Цитата из книги: " + quotes_name);
+            String bookName = extras.getString(MainActivity.BOOK_NAME_KEY);
+            String quote = extras.getString(MainActivity.QUOTES_KEY);
+
+            textViewDevBook.setText("Любимая книга разработчика: " + bookName);
+            textViewDevQuote.setText("Цитата из книги: " + quote);
         }
+    }
 
-        // Обработка кнопки отправки
-        sendButton.setOnClickListener(v -> {
-            String book = editBookUser.getText().toString();
-            String quote = editQuoteUser.getText().toString();
-            String result = "Название Вашей любимой книги: " + book + ". Цитата: " + quote;
+    public void sendUserData(View view) {
+        String userBook = editTextBook.getText().toString();
+        String userQuote = editTextQuote.getText().toString();
 
-            Intent data = new Intent();
-            data.putExtra(MainActivity.USER_MESSAGE, result);
-            setResult(Activity.RESULT_OK, data);
-            finish();
-        });
+        String resultText = "Название Вашей любимой книги: " + userBook + ". Цитата: " + userQuote;
+
+        Intent data = new Intent();
+        data.putExtra(MainActivity.USER_MESSAGE, resultText);
+        setResult(Activity.RESULT_OK, data);
+        finish();
     }
 }
