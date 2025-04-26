@@ -1,0 +1,47 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFEB3B"
+    tools:context=".MainActivity">
+
+    <!-- Заголовок -->
+    <TextView
+        android:id="@+id/titleTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"
+        android:text="Music Player"
+        android:textColor="#D81B60"
+        android:textSize="32sp"
+        android:textStyle="bold" />
+
+    <!-- Кнопка воспроизведения -->
+    <Button
+        android:id="@+id/buttonPlay"
+        android:layout_width="150dp"
+        android:layout_height="60dp"
+        android:layout_below="@id/titleTextView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="100dp"
+        android:backgroundTint="#D81B60"
+        android:text="Play"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp" />
+
+    <!-- Кнопка остановки -->
+    <Button
+        android:id="@+id/buttonStop"
+        android:layout_width="150dp"
+        android:layout_height="60dp"
+        android:layout_below="@id/buttonPlay"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:backgroundTint="#F44336"
+        android:text="Stop"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp" />
+
+</RelativeLayout>
