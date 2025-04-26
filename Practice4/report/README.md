@@ -890,3 +890,131 @@ public class UploadWorker extends Worker {
 
 **Задание №6**
 
+​	В проекте MireaProject создан новый модуль pr4 и фрагмент BackgroundTaskFragment, который использует WorkManager для выполнения фоновой задачи с классом TaskWorker, имитирующим работу с задержкой 5 секунд и требующим наличия интернета. Фрагмент отображает статус задачи ("Running", "Succeeded" и т.д.) в TextView и запускает задачу по нажатию на кнопку, а MainActivity настроена для отображения этого фрагмента через FragmentContainerView. Добавлены необходимые зависимости в build.gradle, разрешение на интернет в AndroidManifest.xml, а также проведено тестирование, подтвердившее корректное выполнение задачи с логированием в Logcat.
+
+​	MainActivity:
+
+```java
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.fragment_container), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new BackgroundTaskFragment())
+                    .commit();
+        }
+    }
+}
+```
+
+​	BackgroundTaskFragment:
+
+```java
+public class BackgroundTaskFragment extends Fragment {
+
+    private TextView statusTextView;
+    private Button startTaskButton;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_background_task, container, false);
+
+        statusTextView = view.findViewById(R.id.statusTextView);
+        startTaskButton = view.findViewById(R.id.startTaskButton);
+
+        startTaskButton.setOnClickListener(v -> startBackgroundTask());
+
+        return view;
+    }
+
+    private void startBackgroundTask() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED) 
+                .build();
+
+        WorkRequest taskRequest = new OneTimeWorkRequest.Builder(TaskWorker.class)
+                .setConstraints(constraints)
+                .build();
+
+        WorkManager workManager = WorkManager.getInstance(requireContext());
+        workManager.enqueue(taskRequest);
+
+        workManager.getWorkInfoByIdLiveData(taskRequest.getId()).observe(getViewLifecycleOwner(), workInfo -> {
+            if (workInfo != null) {
+                WorkInfo.State state = workInfo.getState();
+                switch (state) {
+                    case ENQUEUED:
+                        statusTextView.setText("Task Status: Enqueued...");
+                        break;
+                    case RUNNING:
+                        statusTextView.setText("Task Status: Running...");
+                        break;
+                    case SUCCEEDED:
+                        statusTextView.setText("Task Status: Succeeded!");
+                        break;
+                    case FAILED:
+                        statusTextView.setText("Task Status: Failed.");
+                        break;
+                    case BLOCKED:
+                        statusTextView.setText("Task Status: Blocked...");
+                        break;
+                    case CANCELLED:
+                        statusTextView.setText("Task Status: Cancelled.");
+                        break;
+                }
+            }
+        });
+    }
+}
+```
+
+​	TaskWorker:
+
+```java
+public class TaskWorker extends Worker {
+    private static final String TAG = "TaskWorker";
+
+    public TaskWorker(@NonNull Context context, @NonNull WorkerParameters params) {
+        super(context, params);
+    }
+
+    @Override
+    public Result doWork() {
+        Log.d(TAG, "doWork: Starting background task");
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Log.e(TAG, "doWork: Task failed", e);
+            return Result.failure();
+        }
+        Log.d(TAG, "doWork: Task completed successfully");
+        return Result.success();
+    }
+}
+```
+
+​	При запуске приложения открывается экран:
+
+<img src="images/6_1.png" style="zoom: 80%;" />
+
+​	После нажатия на кнопку начинается выполнение задачи, запускается задержка:
+
+<img src="images/6_2.png" style="zoom: 80%;" />
+
+<img src="images/6_3.png" style="zoom: 80%;" />
+
+​	В Logcat были выведены следующие логи с разницей 5 секунд: 
+
+<img src="images/6_4.png" style="zoom: 80%;" />
