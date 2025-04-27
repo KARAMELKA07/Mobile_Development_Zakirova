@@ -1,4 +1,4 @@
-**Задание №1**
+#### **Задание №1**
 
 ​	Был создан новый проект Lesson6.
 
@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-**Задание №2**
+#### **Задание №2**
 
 ​	Создан модуль SecureSharedPreferences с экраном для отображения имени поэта и изображения. Реализовано безопасное хранение данных с использованием EncryptedSharedPreferences. Файл настроек найден в /data/data/ru.mirea.zakirovakr.securesharedpreferences/shared_prefs/secret_shared_prefs.xml. 	activity_main.xml:
 
@@ -267,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-**Задание №3.1**
+#### **Задание №3.1**
 
 ​	Был создан новый модуль InternalFileStorage. реализующий запись и чтение памятной даты (9 мая 1945 года: День Победы) в файл history.txt во внутреннем хранилище. Приложение позволяет вводить текст в поле, сохранять его в файл по нажатию кнопки и отображать содержимое файла в TextView через 5 секунд после запуска. 
 
@@ -426,7 +426,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-**Задание №3.3**
+#### **Задание №3.2**
 
 ​	Создан модуль Notebook с приложением "Блокнот" для сохранения и загрузки цитат. Реализовано сохранение цитат Эйнштейна и Конфуция в einstein_quote.txt и confucius_quote.txt в DIRECTORY_DOCUMENTS.
 
@@ -658,7 +658,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-**Задание №4**
+#### **Задание №4**
 
 ​	Создан модуль EmployeeDB с базой данных Room для хранения информации о супергероях. Реализован интерфейс для добавления, загрузки, обновления и удаления героев.
 
@@ -997,6 +997,492 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-**КОНТРОЛЬНОЕ ЗАДАНИЕ**
+#### **КОНТРОЛЬНОЕ ЗАДАНИЕ**
 
-​	
+​	В проекте MireaProject добавлены два фрагмента: Профиль (сохранение имени, возраста и хобби в SharedPreferences с автоматической загрузкой при открытии) и Работа с файлами (шифрование/дешифрование текста шифром Цезаря, сохранение в DIRECTORY_DOCUMENTS, диалоговое окно для ввода через FloatingActionButton). Фрагменты интегрированы в существующую навигацию (mobile_navigation.xml, activity_main_drawer.xml), создана директория raw для скриншота. Разрешения для работы с файлами запрашиваются в MainActivity.
+
+​	ProfileFragment.java:
+
+```java
+public class ProfileFragment extends Fragment {
+
+    private EditText editTextName, editTextAge, editTextHobby;
+    private SharedPreferences preferences;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_profile, container, false);
+
+        editTextName = view.findViewById(R.id.editTextName);
+        editTextAge = view.findViewById(R.id.editTextAge);
+        editTextHobby = view.findViewById(R.id.editTextHobby);
+        Button buttonSave = view.findViewById(R.id.buttonSave);
+
+        preferences = requireActivity().getSharedPreferences("user_profile", Context.MODE_PRIVATE);
+
+        loadProfileData();
+
+        buttonSave.setOnClickListener(v -> saveProfileData());
+
+        return view;
+    }
+
+    private void saveProfileData() {
+        String name = editTextName.getText().toString().trim();
+        String age = editTextAge.getText().toString().trim();
+        String hobby = editTextHobby.getText().toString().trim();
+
+        if (name.isEmpty() || age.isEmpty() || hobby.isEmpty()) {
+            Toast.makeText(requireContext(), "Заполните все поля", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("NAME", name);
+        editor.putInt("AGE", Integer.parseInt(age));
+        editor.putString("HOBBY", hobby);
+        editor.apply();
+
+        Toast.makeText(requireContext(), "Профиль сохранён", Toast.LENGTH_SHORT).show();
+    }
+
+    private void loadProfileData() {
+        String name = preferences.getString("NAME", "");
+        int age = preferences.getInt("AGE", 0);
+        String hobby = preferences.getString("HOBBY", "");
+
+        editTextName.setText(name);
+        editTextAge.setText(age == 0 ? "" : String.valueOf(age));
+        editTextHobby.setText(hobby);
+    }
+}
+```
+
+​	fragment_profile.xml:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/editTextName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Имя"
+        android:inputType="text"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/editTextAge"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Возраст"
+        android:inputType="number"
+        app:layout_constraintTop_toBottomOf="@id/editTextName"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="16dp" />
+
+    <EditText
+        android:id="@+id/editTextHobby"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Любимое хобби"
+        android:inputType="text"
+        app:layout_constraintTop_toBottomOf="@id/editTextAge"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="16dp" />
+
+    <Button
+        android:id="@+id/buttonSave"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Сохранить"
+        app:layout_constraintTop_toBottomOf="@id/editTextHobby"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="16dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+​	FileWorkFragment.java
+
+```java
+public class FileWorkFragment extends Fragment {
+
+    private static final String TAG = FileWorkFragment.class.getSimpleName();
+    private static final int REQUEST_PERMISSION_CODE = 100;
+    private TextView textViewFiles;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_file_work, container, false);
+
+        textViewFiles = view.findViewById(R.id.textViewFiles);
+        FloatingActionButton fab = view.findViewById(R.id.fab);
+
+        requestStoragePermissions();
+
+        updateFileList();
+
+        fab.setOnClickListener(v -> showFileDialog());
+
+        return view;
+    }
+
+    private void requestStoragePermissions() {
+        if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(),
+                    new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            android.Manifest.permission.READ_EXTERNAL_STORAGE},
+                    REQUEST_PERMISSION_CODE);
+        }
+    }
+
+    private void showFileDialog() {
+        Dialog dialog = new Dialog(requireContext());
+        dialog.setContentView(R.layout.dialog_file_entry);
+
+        EditText editTextFileName = dialog.findViewById(R.id.editTextFileName);
+        EditText editTextContent = dialog.findViewById(R.id.editTextContent);
+        Button buttonEncrypt = dialog.findViewById(R.id.buttonEncrypt);
+        Button buttonDecrypt = dialog.findViewById(R.id.buttonDecrypt);
+
+        buttonEncrypt.setOnClickListener(v -> {
+            String fileName = editTextFileName.getText().toString().trim();
+            String content = editTextContent.getText().toString().trim();
+            if (fileName.isEmpty() || content.isEmpty()) {
+                Toast.makeText(requireContext(), "Заполните все поля", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            encryptAndSave(fileName, content);
+            dialog.dismiss();
+        });
+
+        buttonDecrypt.setOnClickListener(v -> {
+            String fileName = editTextFileName.getText().toString().trim();
+            if (fileName.isEmpty()) {
+                Toast.makeText(requireContext(), "Введите название файла", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String decrypted = decryptFile(fileName);
+            editTextContent.setText(decrypted);
+        });
+
+        dialog.show();
+    }
+
+    private void encryptAndSave(String fileName, String content) {
+        if (!fileName.endsWith(".txt")) {
+            fileName += ".txt";
+        }
+
+        String encrypted = caesarCipher(content, 3); // Шифр Цезаря со сдвигом 3
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        if (!path.exists()) {
+            path.mkdirs();
+        }
+
+        File file = new File(path, fileName);
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(encrypted.getBytes(StandardCharsets.UTF_8));
+            Toast.makeText(requireContext(), "Файл зашифрован и сохранён", Toast.LENGTH_SHORT).show();
+            updateFileList();
+        } catch (IOException e) {
+            Toast.makeText(requireContext(), "Ошибка сохранения: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Ошибка сохранения: " + e.getMessage());
+        }
+    }
+
+    private String decryptFile(String fileName) {
+        if (!fileName.endsWith(".txt")) {
+            fileName += ".txt";
+        }
+
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        File file = new File(path, fileName);
+        try (FileInputStream fis = new FileInputStream(file);
+             InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
+             BufferedReader reader = new BufferedReader(isr)) {
+            List<String> lines = new ArrayList<>();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
+            String encrypted = String.join("\n", lines);
+            String decrypted = caesarCipher(encrypted, -3); // Дешифровка со сдвигом -3
+            Toast.makeText(requireContext(), "Файл расшифрован", Toast.LENGTH_SHORT).show();
+            return decrypted;
+        } catch (IOException e) {
+            Toast.makeText(requireContext(), "Ошибка чтения: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Ошибка чтения: " + e.getMessage());
+            return "";
+        }
+    }
+
+    private String caesarCipher(String text, int shift) {
+        StringBuilder result = new StringBuilder();
+        for (char c : text.toCharArray()) {
+            if (Character.isLetter(c)) {
+                char base = Character.isUpperCase(c) ? 'A' : 'a';
+                result.append((char) ((c - base + shift + 26) % 26 + base));
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
+    }
+
+    private void updateFileList() {
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        File[] files = path.listFiles();
+        StringBuilder sb = new StringBuilder("Список зашифрованных файлов:\n");
+        if (files != null) {
+            for (File file : files) {
+                if (file.getName().endsWith(".txt")) {
+                    sb.append(file.getName()).append("\n");
+                }
+            }
+        } else {
+            sb.append("Папка пуста");
+        }
+        textViewFiles.setText(sb.toString());
+    }
+}
+```
+
+​	fragment_file_work.xml:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/textViewFiles"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Список зашифрованных файлов"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@android:drawable/ic_input_add"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+​	dialog_file_entry.xml:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/editTextFileName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Название файла (без .txt)"
+        android:inputType="text"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/editTextContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Текст для шифрования"
+        android:inputType="textMultiLine"
+        app:layout_constraintTop_toBottomOf="@id/editTextFileName"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/buttonEncrypt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="56dp"
+        android:layout_marginTop="8dp"
+        android:text="Зашифровать и сохранить"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/editTextContent" />
+
+    <Button
+        android:id="@+id/buttonDecrypt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+        android:layout_marginEnd="108dp"
+        android:text="Расшифровать"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/editTextContent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+​	MainActivity.java:
+
+```java
+public class MainActivity extends AppCompatActivity {
+
+    private AppBarConfiguration mAppBarConfiguration;
+    private ActivityMainBinding binding;
+
+    private final ActivityResultLauncher<String[]> permissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                Boolean cameraGranted = result.getOrDefault(Manifest.permission.CAMERA, false);
+                Boolean audioGranted = result.getOrDefault(Manifest.permission.RECORD_AUDIO, false);
+                Boolean storageWriteGranted = result.getOrDefault(Manifest.permission.WRITE_EXTERNAL_STORAGE, false);
+                Boolean storageReadGranted = result.getOrDefault(Manifest.permission.READ_EXTERNAL_STORAGE, false);
+
+                if (cameraGranted != null && cameraGranted &&
+                        audioGranted != null && audioGranted &&
+                        storageWriteGranted != null && storageWriteGranted &&
+                        storageReadGranted != null && storageReadGranted) {
+                    Toast.makeText(this, "All permissions granted", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Permissions denied", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        setSupportActionBar(binding.appBarMain.toolbar);
+        binding.appBarMain.fab.setOnClickListener(view ->
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null)
+                        .setAnchorView(R.id.fab).show());
+
+        DrawerLayout drawer = binding.drawerLayout;
+        NavigationView navigationView = binding.navView;
+        mAppBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.nav_home,
+                R.id.nav_gallery,
+                R.id.nav_slideshow,
+                R.id.nav_data,
+                R.id.nav_webview,
+                R.id.nav_sensor,
+                R.id.nav_camera,
+                R.id.nav_microphone,
+                R.id.nav_profile,
+                R.id.nav_file_work
+        ).setOpenableLayout(drawer).build();
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
+        NavigationUI.setupWithNavController(navigationView, navController);
+
+        checkAndRequestPermissions();
+    }
+
+    private void checkAndRequestPermissions() {
+        String[] permissions = {
+                Manifest.permission.CAMERA,
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+        };
+
+        boolean allPermissionsGranted = true;
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                allPermissionsGranted = false;
+                break;
+            }
+        }
+
+        if (!allPermissionsGranted) {
+            permissionLauncher.launch(permissions);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        return NavigationUI.navigateUp(navController, mAppBarConfiguration)
+                || super.onSupportNavigateUp();
+    }
+}
+```
+
+​	При запуске приложения app можно открыть меню:
+
+<img src="images/6.png" style="zoom: 30%;" />
+
+​	Переходим в профиль:
+
+<img src="images/6_1.png" style="zoom: 30%;" />
+
+​	Вводим данные и сохраняем:
+
+<img src="images/6_2.png" style="zoom: 30%;" />
+
+​	При следующем запуске данные автоматически подгрузятся из файла /data/data/ru.mirea.zakirovakr.mireaproject/shared_prefs/user_profile.xml:
+
+```xml
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="HOBBY">Петь</string>
+    <string name="NAME">Карина</string>
+    <int name="AGE" value="20" />
+</map>
+```
+
+​	Переходим к работа с файлами:
+
+<img src="images/6_3.png" style="zoom: 30%;" />
+
+​	Создаем новый файл шифруем и сохраняем:
+
+<img src="images/6_4.png" style="zoom: 30%;" />
+
+<img src="images/6_5.png" style="zoom: 30%;" />
+
+​	Теперь расшифруем сообщение из файла по его названию: 
+
+<img src="images/6_6.png" style="zoom: 30%;" />
+
+​	Нажимаем "Расшифровать":
+
+<img src="images/6_7.png" style="zoom: 30%;" />
+
+​	/storage/emulated/0/Documents/hello.txt:
+
+```txt
+Pb qdph lv Ndulqd
+```
+
+​	/storage/emulated/0/Documents/name.txt:
+
+```txt
+Ndulqd
+```
+
+​	Созданные файлы были перенесены в папку res/raw/

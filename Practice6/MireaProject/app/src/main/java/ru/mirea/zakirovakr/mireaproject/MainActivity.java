@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Toast;
-
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,10 +15,8 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
-
 import ru.mirea.zakirovakr.mireaproject.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
@@ -67,7 +64,9 @@ public class MainActivity extends AppCompatActivity {
                 R.id.nav_webview,
                 R.id.nav_sensor,
                 R.id.nav_camera,
-                R.id.nav_microphone
+                R.id.nav_microphone,
+                R.id.nav_profile,
+                R.id.nav_file_work
         ).setOpenableLayout(drawer).build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);

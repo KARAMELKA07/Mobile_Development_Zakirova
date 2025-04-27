@@ -38,7 +38,14 @@
             android:id="@+id/nav_microphone"
             android:icon="@drawable/mic"
             android:title="Lesson5_Microphone" />
-
+        <item
+            android:id="@+id/nav_profile"
+            android:icon="@drawable/account_circle"
+            android:title="Lesson6_Profile" />
+        <item
+            android:id="@+id/nav_file_work"
+            android:icon="@drawable/star"
+            android:title="Lesson6_File Work" />
 
     </group>
 </menu>
