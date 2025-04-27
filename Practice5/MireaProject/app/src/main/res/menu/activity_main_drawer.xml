@@ -26,6 +26,19 @@
             android:icon="@drawable/star"
             android:title="@string/webview" />
 
+        <item
+            android:id="@+id/nav_sensor"
+            android:icon="@drawable/globe"
+            android:title="Lesson5_Sensor" />
+        <item
+            android:id="@+id/nav_camera"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="Lesson5_Camera" />
+        <item
+            android:id="@+id/nav_microphone"
+            android:icon="@drawable/mic"
+            android:title="Lesson5_Microphone" />
+
 
     </group>
 </menu>

@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "MireaProject"
 include(":app")
 include(":pr4")
+include(":pr5")

@@ -645,3 +645,628 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+**Контрольное задание**
+
+​		В проекте MireaProject в модуле app были созданы новые фрагменты: CameraFragment, MicrophoneFragment, SensorFragment. Эти фрагменты предназначены для взаимодействия с аппаратным обеспечением устройства (камерой, микрофоном и датчиками).
+
+​	AndroidManifest.xml:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-feature android:name="android.hardware.camera" android:required="true" />
+    <uses-feature android:name="android.hardware.sensor.compass" android:required="true" />
+    <uses-feature android:name="android.hardware.microphone" android:required="true" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MireaProject"
+        tools:targetApi="31">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MireaProject.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```
+
+​	MainActivity.java:
+
+```java
+public class MainActivity extends AppCompatActivity {
+
+    private AppBarConfiguration mAppBarConfiguration;
+    private ActivityMainBinding binding;
+
+    private final ActivityResultLauncher<String[]> permissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                Boolean cameraGranted = result.getOrDefault(Manifest.permission.CAMERA, false);
+                Boolean audioGranted = result.getOrDefault(Manifest.permission.RECORD_AUDIO, false);
+                Boolean storageWriteGranted = result.getOrDefault(Manifest.permission.WRITE_EXTERNAL_STORAGE, false);
+                Boolean storageReadGranted = result.getOrDefault(Manifest.permission.READ_EXTERNAL_STORAGE, false);
+
+                if (cameraGranted != null && cameraGranted &&
+                        audioGranted != null && audioGranted &&
+                        storageWriteGranted != null && storageWriteGranted &&
+                        storageReadGranted != null && storageReadGranted) {
+                    Toast.makeText(this, "All permissions granted", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Permissions denied", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        setSupportActionBar(binding.appBarMain.toolbar);
+        binding.appBarMain.fab.setOnClickListener(view ->
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null)
+                        .setAnchorView(R.id.fab).show());
+
+        DrawerLayout drawer = binding.drawerLayout;
+        NavigationView navigationView = binding.navView;
+        mAppBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.nav_home,
+                R.id.nav_gallery,
+                R.id.nav_slideshow,
+                R.id.nav_data,
+                R.id.nav_webview,
+                R.id.nav_sensor,
+                R.id.nav_camera,
+                R.id.nav_microphone
+        ).setOpenableLayout(drawer).build();
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
+        NavigationUI.setupWithNavController(navigationView, navController);
+
+        checkAndRequestPermissions();
+    }
+
+    private void checkAndRequestPermissions() {
+        String[] permissions = {
+                Manifest.permission.CAMERA,
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+        };
+
+        boolean allPermissionsGranted = true;
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                allPermissionsGranted = false;
+                break;
+            }
+        }
+
+        if (!allPermissionsGranted) {
+            permissionLauncher.launch(permissions);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        return NavigationUI.navigateUp(navController, mAppBarConfiguration)
+                || super.onSupportNavigateUp();
+    }
+}
+```
+
+​	Фрагмент камеры позволяет пользователю сделать снимок с помощью камеры устройства, отобразить полученное изображение и ввести информацию о профиле (ФИО, группу и номер в списке).
+
+​	CameraFragment.java:
+
+```java
+public class CameraFragment extends Fragment {
+
+    private ImageView imageView;
+    private EditText fioEditText, groupEditText, listNumberEditText;
+    private TextView profileInfoTextView;
+    private final ActivityResultLauncher<Intent> cameraLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == requireActivity().RESULT_OK && result.getData() != null) {
+                    Bundle extras = result.getData().getExtras();
+                    Bitmap imageBitmap = (Bitmap) extras.get("data");
+                    imageView.setImageBitmap(imageBitmap);
+                } else {
+                    Toast.makeText(requireContext(), "Не удалось сделать фото", Toast.LENGTH_SHORT).show();
+                }
+            });
+    private final ActivityResultLauncher<String> permissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    launchCamera();
+                } else {
+                    Toast.makeText(requireContext(), "Для съемки фото требуется разрешение на использование камеры", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_camera, container, false);
+
+        imageView = view.findViewById(R.id.imageView);
+        fioEditText = view.findViewById(R.id.fioEditText);
+        groupEditText = view.findViewById(R.id.groupEditText);
+        listNumberEditText = view.findViewById(R.id.listNumberEditText);
+        profileInfoTextView = view.findViewById(R.id.profileInfoTextView);
+        Button captureButton = view.findViewById(R.id.captureButton);
+        Button saveButton = view.findViewById(R.id.saveButton);
+
+        captureButton.setOnClickListener(v -> {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                launchCamera();
+            } else {
+                permissionLauncher.launch(Manifest.permission.CAMERA);
+            }
+        });
+
+        saveButton.setOnClickListener(v -> {
+            String fio = fioEditText.getText().toString().trim();
+            String group = groupEditText.getText().toString().trim();
+            String listNumber = listNumberEditText.getText().toString().trim();
+
+            if (fio.isEmpty() || group.isEmpty() || listNumber.isEmpty()) {
+                Toast.makeText(requireContext(), "Пожалуйста, заполните все поля", Toast.LENGTH_SHORT).show();
+            } else {
+                String profileInfo = "ФИО: " + fio + "\n" +
+                        "Группа: " + group + "\n" +
+                        "Номер в списке: " + listNumber;
+                profileInfoTextView.setText(profileInfo);
+                Toast.makeText(requireContext(), "Профиль сохранен", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        return view;
+    }
+
+    private void launchCamera() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        cameraLauncher.launch(takePictureIntent);
+    }
+}
+```
+
+ 	fragment_camera.xml:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <Button
+        android:id="@+id/captureButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Сделать фото"
+        android:layout_gravity="center" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"
+        android:contentDescription="Сфотографированное изображение" />
+
+    <EditText
+        android:id="@+id/fioEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="ФИО"
+        android:inputType="textPersonName" />
+
+    <EditText
+        android:id="@+id/groupEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="Группа"
+        android:inputType="text" />
+
+    <EditText
+        android:id="@+id/listNumberEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="Номер в списке"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/saveButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"
+        android:text="Сохранить профиль" />
+
+    <TextView
+        android:id="@+id/profileInfoTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Информация о профиле появится здесь"
+        android:textSize="16sp"
+        android:textAlignment="center" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Сделайте фото и введите данные для создания профиля."
+        android:textSize="16sp" />
+
+</LinearLayout>
+```
+
+​	Фрагмент микрофона позволяет пользователю записывать звук, останавливать запись и воспроизводить записанный звук.
+
+​	MicrophoneFragment.java:
+
+```java
+public class MicrophoneFragment extends Fragment {
+
+    private MediaRecorder mediaRecorder;
+    private MediaPlayer mediaPlayer;
+    private TextView statusTextView;
+    private Button startRecordButton, stopRecordButton, playButton;
+    private boolean isRecording = false;
+    private String audioFilePath;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_microphone, container, false);
+
+        statusTextView = view.findViewById(R.id.statusTextView);
+        startRecordButton = view.findViewById(R.id.startRecordButton);
+        stopRecordButton = view.findViewById(R.id.stopRecordButton);
+        playButton = view.findViewById(R.id.playButton);
+
+        audioFilePath = requireActivity().getExternalFilesDir(Environment.DIRECTORY_MUSIC) + "/audio_record.3gp";
+
+        startRecordButton.setOnClickListener(v -> startRecording());
+        stopRecordButton.setOnClickListener(v -> stopRecording());
+        playButton.setOnClickListener(v -> playRecording());
+
+        // Initial button states
+        stopRecordButton.setEnabled(false);
+        playButton.setEnabled(false);
+
+        return view;
+    }
+
+    private void startRecording() {
+        if (!isRecording) {
+            mediaRecorder = new MediaRecorder();
+            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+            mediaRecorder.setOutputFile(audioFilePath);
+            mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+
+            try {
+                mediaRecorder.prepare();
+                mediaRecorder.start();
+                isRecording = true;
+                statusTextView.setText("Идёт запись...");
+                startRecordButton.setEnabled(false);
+                stopRecordButton.setEnabled(true);
+                playButton.setEnabled(false);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(requireContext(), "Не удалось начать запись", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void stopRecording() {
+        if (isRecording) {
+            try {
+                mediaRecorder.stop();
+            } catch (RuntimeException e) {
+                e.printStackTrace();
+            }
+            mediaRecorder.release();
+            mediaRecorder = null;
+            isRecording = false;
+            statusTextView.setText("Запись остановлена. Готово к воспроизведению.");
+            startRecordButton.setEnabled(true);
+            stopRecordButton.setEnabled(false);
+            playButton.setEnabled(true);
+        }
+    }
+
+    private void playRecording() {
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+        }
+        mediaPlayer = new MediaPlayer();
+        try {
+            mediaPlayer.setDataSource(audioFilePath);
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+            statusTextView.setText("Воспроизведение...");
+            playButton.setEnabled(false);
+            mediaPlayer.setOnCompletionListener(mp -> {
+                statusTextView.setText("Воспроизведение завершено.");
+                playButton.setEnabled(true);
+                mediaPlayer.release();
+                mediaPlayer = null;
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(requireContext(), "Не удалось воспроизвести запись", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (isRecording) {
+            stopRecording();
+        }
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mediaRecorder != null) {
+            mediaRecorder.release();
+            mediaRecorder = null;
+        }
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+    }
+}
+```
+
+​	fragment_microphone.xml:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <Button
+        android:id="@+id/startRecordButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Начать запись"
+        android:layout_gravity="center" />
+
+    <Button
+        android:id="@+id/stopRecordButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Остановить запись"
+        android:layout_gravity="center"
+        android:enabled="false" />
+
+    <Button
+        android:id="@+id/playButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Воспроизвести запись"
+        android:layout_gravity="center"
+        android:enabled="false" />
+
+    <TextView
+        android:id="@+id/statusTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Готово к записи"
+        android:textSize="20sp"
+        android:textAlignment="center" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Записывайте аудио и воспроизводите его для создания голосовых заметок или анализа звука."
+        android:textSize="16sp" />
+
+</LinearLayout>
+```
+
+​	Фрагмент сенсора использует датчики акселерометра и магнитометра устройства для определения направления (компаса) и отображения его для пользователя.
+
+​	SensorFragment.java:
+
+```java
+public class SensorFragment extends Fragment implements SensorEventListener {
+
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+    private Sensor magnetometer;
+    private TextView directionTextView;
+
+    private float[] gravity;
+    private float[] geomagnetic;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_sensor, container, false);
+
+        directionTextView = view.findViewById(R.id.directionTextView);
+        sensorManager = (SensorManager) requireActivity().getSystemService(Context.SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+        return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(this);
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            gravity = event.values.clone();
+        } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            geomagnetic = event.values.clone();
+        }
+
+        if (gravity != null && geomagnetic != null) {
+            float[] R = new float[9];
+            float[] I = new float[9];
+            boolean success = SensorManager.getRotationMatrix(R, I, gravity, geomagnetic);
+            if (success) {
+                float[] orientation = new float[3];
+                SensorManager.getOrientation(R, orientation);
+                float azimuth = (float) Math.toDegrees(orientation[0]);
+                azimuth = (azimuth + 360) % 360;
+
+                String direction;
+                if (azimuth >= 337.5 || azimuth < 22.5) {
+                    direction = "Север";
+                } else if (azimuth >= 22.5 && azimuth < 67.5) {
+                    direction = "Северо-восток";
+                } else if (azimuth >= 67.5 && azimuth < 112.5) {
+                    direction = "Восток";
+                } else if (azimuth >= 112.5 && azimuth < 157.5) {
+                    direction = "Юго-восток";
+                } else if (azimuth >= 157.5 && azimuth < 202.5) {
+                    direction = "Юг";
+                } else if (azimuth >= 202.5 && azimuth < 247.5) {
+                    direction = "Юго-запад";
+                } else if (azimuth >= 247.5 && azimuth < 292.5) {
+                    direction = "Запад";
+                } else {
+                    direction = "Северо-запад";
+                }
+
+                directionTextView.setText("Направление: " + direction + " (" + String.format("%.1f", azimuth) + "°)");
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // Not used
+    }
+}
+```
+
+​	fragment_sensor.xml:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/directionTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Направление: Неизвестно"
+        android:textSize="20sp"
+        android:textAlignment="center" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Направьте устройство, чтобы определить направление на север. Это поможет ориентироваться по природным признакам, таким как солнце или мох."
+        android:textSize="16sp" />
+
+</LinearLayout>
+```
+
+​	Далее демонстрация работы приложения.
+
+​	При запуске приложения запрашиваются разрешения:
+
+<img src="images/6_1.png" style="zoom: 30%;" />
+
+<img src="images/6_2.png" style="zoom: 30%;" />
+
+​	Меню выглядит так:
+
+<img src="images/6_3.png" style="zoom: 30%;" />
+
+​	Переходим в раздел сенсора:
+
+<img src="images/6_4.png" style="zoom: 30%;" />
+
+​	Раздел камеры:
+
+<img src="images/6_5.png" style="zoom: 30%;" />
+
+<img src="images/6_6.png" style="zoom: 30%;" />
+
+​	Создание профиля с заполнением данных:
+
+<img src="images/6_7.png" style="zoom: 30%;" />
+
+​	Раздел микрофона:
+
+<img src="images/6_8.png" style="zoom: 30%;" />
+
+<img src="images/6_9.png" style="zoom: 30%;" />
+
+<img src="images/6_10.png" style="zoom: 30%;" />
+
+<img src="images/6_11.png" style="zoom: 30%;" />
+
+<img src="images/6_12.png" style="zoom: 30%;" />
+
+
+
+​	

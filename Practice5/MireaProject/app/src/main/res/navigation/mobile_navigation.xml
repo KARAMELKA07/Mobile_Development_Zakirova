@@ -35,4 +35,22 @@
         android:name="ru.mirea.zakirovakr.mireaproject.WebViewFragment"
         android:label="WebView"
         tools:layout="@layout/fragment_web_view" />
+
+    <fragment
+        android:id="@+id/nav_sensor"
+        android:name="ru.mirea.zakirovakr.mireaproject.SensorFragment"
+        android:label="Sensor"
+        tools:layout="@layout/fragment_sensor" />
+
+    <fragment
+        android:id="@+id/nav_camera"
+        android:name="ru.mirea.zakirovakr.mireaproject.CameraFragment"
+        android:label="Camera"
+        tools:layout="@layout/fragment_camera" />
+
+    <fragment
+        android:id="@+id/nav_microphone"
+        android:name="ru.mirea.zakirovakr.mireaproject.MicrophoneFragment"
+        android:label="Microphone"
+        tools:layout="@layout/fragment_microphone" />
 </navigation>
