@@ -46,6 +46,9 @@
             android:id="@+id/nav_file_work"
             android:icon="@drawable/star"
             android:title="Lesson6_File Work" />
-
+        <item
+            android:id="@+id/nav_network"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="Network" />
     </group>
 </menu>

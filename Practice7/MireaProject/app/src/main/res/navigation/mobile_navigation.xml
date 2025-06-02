@@ -23,7 +23,6 @@
         android:label="@string/menu_slideshow"
         tools:layout="@layout/fragment_slideshow" />
 
-    <!-- Новые фрагменты -->
     <fragment
         android:id="@+id/nav_data"
         android:name="ru.mirea.zakirovakr.mireaproject.DataFragment"
@@ -53,6 +52,7 @@
         android:name="ru.mirea.zakirovakr.mireaproject.MicrophoneFragment"
         android:label="Microphone"
         tools:layout="@layout/fragment_microphone" />
+
     <fragment
         android:id="@+id/nav_profile"
         android:name="ru.mirea.zakirovakr.mireaproject.ProfileFragment"
@@ -65,6 +65,10 @@
         android:label="File Work"
         tools:layout="@layout/fragment_file_work" />
 
-
+    <fragment
+        android:id="@+id/nav_network"
+        android:name="ru.mirea.zakirovakr.mireaproject.NetworkFragment"
+        android:label="Network"
+        tools:layout="@layout/fragment_network" />
 
 </navigation>
