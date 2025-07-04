@@ -25,10 +25,10 @@ public class LoginActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
 
         // Check if user is already signed in
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            startMainActivity();
-        }
+        //FirebaseUser currentUser = mAuth.getCurrentUser();
+        //if (currentUser != null) {
+        //    startMainActivity();
+        //}
 
         // Set up button listeners
         binding.signInButton.setOnClickListener(v -> signIn(
